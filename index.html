@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LembraBem</title>
+  <style>
+    /* RESET */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      color: #111;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #app {
+      padding: 15px;
+    }
+
+    h1 {
+      margin: 20px 0 10px;
+      font-weight: 700;
+      font-size: 2rem;
+      color: #3b82f6;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    nav button {
+      flex: 1 1 45%;
+      max-width: 200px;
+      padding: 15px 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      user-select: none;
+    }
+
+    nav button:active {
+      filter: brightness(0.85);
+    }
+
+    .azul {
+      background-color: #3b82f6;
+    }
+
+    .verde {
+      background-color: #22c55e;
+    }
+
+    .rosa {
+      background-color: #ec4899;
+    }
+
+    .vermelho {
+      background-color: #ef4444;
+    }
+
+    .cinza {
+      background-color: #6b7280;
+    }
+
+    .tela {
+      display: none;
+      padding-bottom: 40px;
+      text-align: center;
+    }
+
+    .tela.active {
+      display: block;
+    }
+
+    input, select, textarea {
+      width: 90%;
+      max-width: 350px;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline-offset: 2px;
+    }
+
+    button.adicionar {
+      background-color: #3b82f6;
+      color: white;
+      font-weight: 700;
+      padding: 12px 25px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s ease;
+    }
+
+    button.adicionar:active {
+      background-color: #2563eb;
+    }
+
+    ul {
+      max-width: 350px;
+      margin: 15px auto;
+      padding: 0;
+      list-style: none;
+      text-align: left;
+      font-size: 1.1rem;
+      color: #444;
+    }
+
+    ul li {
+      background: #fff;
+      margin-bottom: 8px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    ul li button.delete-btn {
+      background: #ef4444;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      user-select: none;
+      font-size: 0.9rem;
+      transition: background-color 0.2s ease;
+    }
+
+    ul li button.delete-btn:active {
+      background-color: #b91c1c;
+    }
+
+    button.cinza {
+      margin-top: 25px;
+      background-color: #6b7280;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: background-color 0.2s ease;
+    }
+
+    button.cinza:active {
+      background-color: #4b5563;
+    }
+
+    #map {
+      width: 90%;
+      max-width: 350px;
+      height: 300px;
+      border-radius: 12px;
+      margin: 15px auto;
+      box-shadow: 0 0 10px #ccc;
+    }
+
+    /* Estilo do modo texto grande */
+    body.grande {
+      font-size: 1.3em;
+    }
+  </style>
+
+  <!-- Google Maps API - substitua YOUR_API_KEY pelo seu -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY" defer></script>
+</head>
+
+<body>
+  <div id="app">
+    <h1>LembraBem</h1>
+
+    <nav id="menuPrincipal">
+      <button class="azul" onclick="mostrarTela('remedios')">💊 Tomar Remédio</button>
+      <button class="verde" onclick="mostrarTela('consultas')">📅 Consultas</button>
+      <button class="rosa" onclick="mostrarTela('dicas')">❤️ Dicas de Saúde</button>
+      <button class="vermelho" onclick="mostrarTela('emergencia')">📞 Emergência</button>
+      <button class="cinza" onclick="mostrarTela('localizacao')">📍 Localização Atual</button>
+      <button class="cinza" onclick="mostrarTela('mais')">➕ Mais Opções</button>
+    </nav>
+
+    <!-- Telas -->
+
+    <section id="remedios" class="tela">
+      <h2>Alarme de Remédios</h2>
+      <input type="text" id="nomeRemedio" placeholder="Nome do remédio" />
+      <input type="time" id="horaRemedio" />
+      <button class="adicionar" onclick="adicionarRemedio()">Adicionar</button>
+      <ul id="listaRemedios"></ul>
+      <audio id="somAlarme" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"></audio>
+      <button class="cinza" onclick="voltar()">⬅ Voltar</button>
+    </section>
+
+    <section id="consultas" class="tela">
+      <h2>Agenda de Consultas</h2>
+      <input type="text" id="nomeMedico" placeholder="Nome do médico" />
+      <input type="text" id="localConsulta" placeholder="Local da consulta" />
+      <input type="time" id="horaConsulta" />
+      <button class="adicionar" onclick="adicionarConsulta()">Adicionar</button>
+      <ul id="listaConsultas"></ul>
+      <button class="cinza" onclick="voltar()">⬅ Voltar</button>
+    </section>
+
+    <section id="dicas" class="tela">
+      <h2>Dicas de Saúde</h2>
+      <ul>
+        <li>🏃 Caminhe 30 minutos por dia.</li>
+        <li>🥗 Coma frutas e verduras diariamente.</li>
+        <li>💧 Beba bastante água.</li>
+      </ul>
+      <button class="cinza" onclick="voltar()">⬅ Voltar</button>
+    </section>
+
+    <section id="emergencia" class="tela">
+      <h2>Contato de Emergência</h2>
+      <input type="tel" id="numeroEmergencia" placeholder="Digite o número" />
+      <button class="adicionar" onclick="salvarNumero()">Salvar</button>
+      <p id="contatoSalvo">Nenhum número cadastrado.</p>
+      <button class="cinza" onclick="voltar()">⬅ Voltar</button>
+    </section>
+
+    <section id="localizacao" class="tela">
+      <h2>Sua Localização Atual</h2>
+      <div id="map"></div>
+      <p id="infoLocalizacao">Buscando localização...</p>
+      <button class="cinza" onclick="voltar()">⬅ Voltar</button>
+    </section>
+
+    <section id="mais" class="tela">
+      <h2>Mais Opções</h2>
+      <ul id="listaMais" style="max-width:350px; margin: auto; padding: 0; list-style:none; font-size:1.2rem; color:#333;">
+        <li><button onclick="mostrarTela('listaCompras')" class="cinza" style="width:100%; margin-bottom:8px;">🛒 Lista de Compras</button></li>
+        <li><button onclick="mostrarTela('exerciciosMentais')" class="cinza" style="width:100%; margin-bottom:8px;">🧠 Exercícios Mentais</button></li>
+        <li><button onclick="mostrarTela('lembretesPersonalizados')" class="cinza" style="width:100%; margin-bottom:8px;">🔔 Lembretes Personalizados</button></li>
+        <li><button onclick="mostrarTela('locaisProximos')" class="cinza" style="width:100%; margin-bottom:8px;">📍 Locais Próximos</button></li>
+        <li><button onclick="mostrarTela('diarioSaude')" class="cinza" style="width:100%; margin-bottom:8px;">📓 Diário da Saúde</button></li>
+        <li><button onclick="mostrarTela('historicoRemedios')" class="cinza" style="width:100%; margin-bottom:8px;">📋 Histórico de Remédios</button></li>
+        <li><button onclick="mostrarTela('contatosSaude')" class="cinza" style="width:100%; margin-bottom:8px;">👨‍⚕️ Contatos de Saúde</button></li>
+        <li><button onclick="alternarTextoGrande()" class="cinza" style="width:100%; margin-bottom:8px;">🔎 Modo Texto Grande</button></li>
+        <li><button onclick="leituraVozAlta()" class="cinza" style="width:100%; margin-bottom:8px;">🔈 Leitura em Voz Alta</button></li>
+        <li><button disabled class="cinza" style="width:100%; opacity:0.6; cursor:not-allowed;">🔒 Área Segura (em breve)</button></li>
+      </ul>
+      <button class="cinza" onclick="voltar()">⬅ Voltar</button>
+    </section>
+
+    <!-- Telas do 'Mais' -->
+
+    <section id="listaCompras" class="tela">
+      <h2>Lista de Compras</h2>
+      <input type="text" id="itemCompra" placeholder="Adicionar item" />
+      <button class="adicionar" onclick="adicionarCompra()">Adicionar</button>
+      <ul id="listaDeCompras"></ul>
+      <button class="cinza" onclick="mostrarTela('mais')">⬅ Voltar</button>
+    </section>
+
+    <section id="exerciciosMentais" class="tela">
+      <h2>Exercícios Mentais</h2>
+      <p>Resolva este desafio:</p>
+      <p><strong>Quanto é 7 + 5?</strong></p>
+      <input type="number" id="respostaExercicio" placeholder="Sua resposta" />
+      <button class="adicionar" onclick="verificarExercicio()">Verificar</button>
+      <p id="resultadoExercicio"></p>
+      <button class="cinza" onclick="mostrarTela('mais')">⬅ Voltar</button>
+    </section>
+
+    <section id="lembretesPersonalizados" class="tela">
+      <h2>Lembretes Personalizados</h2>
+      <input type="text" id="textoLembrete" placeholder="Digite seu lembrete" />
+      <input type="time" id="horaLembrete" />
+      <button class="adicionar" onclick="adicionarLembrete()">Adicionar</button>
+      <ul id="listaLembretes"></ul>
+      <button class="cinza" onclick="mostrarTela('mais')">⬅ Voltar</button>
+    </section>
+
+    <section id="locaisProximos" class="tela">
+      <h2>Locais Próximos</h2>
+      <p>Funcionalidade em desenvolvimento...</p>
+      <button class="cinza" onclick="mostrarTela('mais')">⬅ Voltar</button>
+    </section>
+
+    <section id="diarioSaude" class="tela">
+      <h2>Diário da Saúde</h2>
+      <textarea id="textoDiario" placeholder="Escreva sobre seu dia..." rows="6" style="width:90%; max-width:350px; border-radius:8px; border:1px solid #ccc; font-size:1rem;"></textarea>
+      <button class="adicionar" onclick="salvarDiario()">Salvar</button>
+      <p id="msgDiario"></p>
+      <button class="cinza" onclick="mostrarTela('mais')">⬅ Voltar</button>
+    </section>
+
+    <section id="historicoRemedios" class="tela">
+      <h2>Histórico de Remédios</h2>
+      <ul id="historicoRemediosLista"></ul>
+      <button class="cinza" onclick="mostrarTela('mais')">⬅ Voltar</button>
+    </section>
+
+    <section id="contatosSaude" class="tela">
+      <h2>Contatos de Saúde</h2>
+      <input type="text" id="nomeContato" placeholder="Nome do contato" />
+      <input type="tel" id="telefoneContato" placeholder="Telefone" />
+      <button class="adicionar" onclick="adicionarContato()">Adicionar</button>
+      <ul id="listaContatos"></ul>
+      <button class="cinza" onclick="mostrarTela('mais')">⬅ Voltar</button>
+    </section>
+  </div>
+
+  <script>
+    // Variáveis globais
+    let map;
+    let marker;
+
+    // Controla quais telas estão visíveis
+    function mostrarTela(id) {
+      document.querySelectorAll(".tela").forEach(tela => {
+        tela.classList.remove("active");
+      });
+      document.getElementById(id).classList.add("active");
+
+      if (id === "localizacao") {
+        iniciarMapa();
+      }
+    }
+
+    function voltar() {
+      mostrarTela("menuPrincipal");
+      // Como não temos menuPrincipal como tela, escondemos todas
+      document.querySelectorAll(".tela").forEach(tela => {
+        tela.classList.remove("active");
+      });
+    }
+
+    // =================== REMÉDIOS =====================
+    const listaRemedios = [];
+    function adicionarRemedio() {
+      const nome = document.getElementById("nomeRemedio").value.trim();
+      const hora = document.getElementById("horaRemedio").value;
+
+      if (!nome || !hora) {
+        alert("Por favor, preencha nome e horário do remédio.");
+        return;
+      }
+
+      listaRemedios.push({ nome, hora });
+      atualizarListaRemedios();
+      document.getElementById("nomeRemedio").value = "";
+      document.getElementById("horaRemedio").value = "";
+    }
+
+    function atualizarListaRemedios() {
+      const ul = document.getElementById("listaRemedios");
+      ul.innerHTML = "";
+      listaRemedios.forEach((remedio, i) => {
+        const li = document.createElement("li");
+        li.textContent = `${remedio.nome} - ${remedio.hora}`;
+        // botão remover
+        const btn = document.createElement("button");
+        btn.textContent = "X";
+        btn.className = "delete-btn";
+        btn.onclick = () => {
+          listaRemedios.splice(i, 1);
+          atualizarListaRemedios();
+        };
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+
+      // Atualizar histórico também
+      atualizarHistoricoRemedios();
+    }
+
+    // =================== HISTÓRICO REMÉDIOS =====================
+    let historicoRemedios = [];
+    function atualizarHistoricoRemedios() {
+      historicoRemedios = listaRemedios.slice(); // copia atual
+      const ul = document.getElementById("historicoRemediosLista");
+      ul.innerHTML = "";
+      historicoRemedios.forEach((remedio) => {
+        const li = document.createElement("li");
+        li.textContent = `${remedio.nome} - ${remedio.hora}`;
+        ul.appendChild(li);
+      });
+    }
+
+    // =================== CONSULTAS =====================
+    const listaConsultas = [];
+    function adicionarConsulta() {
+      const nome = document.getElementById("nomeMedico").value.trim();
+      const local = document.getElementById("localConsulta").value.trim();
+      const hora = document.getElementById("horaConsulta").value;
+
+      if (!nome || !local || !hora) {
+        alert("Preencha todos os campos da consulta.");
+        return;
+      }
+
+      listaConsultas.push({ nome, local, hora });
+      atualizarListaConsultas();
+      document.getElementById("nomeMedico").value = "";
+      document.getElementById("localConsulta").value = "";
+      document.getElementById("horaConsulta").value = "";
+    }
+
+    function atualizarListaConsultas() {
+      const ul = document.getElementById("listaConsultas");
+      ul.innerHTML = "";
+      listaConsultas.forEach((consulta, i) => {
+        const li = document.createElement("li");
+        li.textContent = `${consulta.nome} - ${consulta.local} às ${consulta.hora}`;
+        // botão remover
+        const btn = document.createElement("button");
+        btn.textContent = "X";
+        btn.className = "delete-btn";
+        btn.onclick = () => {
+          listaConsultas.splice(i, 1);
+          atualizarListaConsultas();
+        };
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+    }
+
+    // =================== EMERGÊNCIA =====================
+    function salvarNumero() {
+      const num = document.getElementById("numeroEmergencia").value.trim();
+      if (!num) {
+        alert("Digite um número de emergência.");
+        return;
+      }
+      localStorage.setItem("numEmergencia", num);
+      document.getElementById("contatoSalvo").textContent = `Número salvo: ${num}`;
+      document.getElementById("numeroEmergencia").value = "";
+    }
+
+    window.onload = function () {
+      const numSalvo = localStorage.getItem("numEmergencia");
+      if (numSalvo) {
+        document.getElementById("contatoSalvo").textContent = `Número salvo: ${numSalvo}`;
+      }
+    };
+
+    // =================== LOCALIZAÇÃO =====================
+    function iniciarMapa() {
+      if (!navigator.geolocation) {
+        document.getElementById("infoLocalizacao").textContent = "Geolocalização não suportada.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const latlng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          document.getElementById("infoLocalizacao").textContent = `Lat: ${latlng.lat.toFixed(4)}, Lng: ${latlng.lng.toFixed(4)}`;
+
+          if (!map) {
+            map = new google.maps.Map(document.getElementById("map"), {
+              center: latlng,
+              zoom: 15,
+            });
+            marker = new google.maps.Marker({
+              position: latlng,
+              map,
+              title: "Você está aqui",
+            });
+          } else {
+            map.setCenter(latlng);
+            marker.setPosition(latlng);
+          }
+        },
+        (erro) => {
+          document.getElementById("infoLocalizacao").textContent = "Erro ao obter localização.";
+        }
+      );
+    }
+
+    // =================== MAIS OPÇÕES =====================
+
+    // Lista de Compras
+    const listaCompras = [];
+    function adicionarCompra() {
+      const item = document.getElementById("itemCompra").value.trim();
+      if (!item) {
+        alert("Digite um item para adicionar.");
+        return;
+      }
+      listaCompras.push(item);
+      atualizarListaCompras();
+      document.getElementById("itemCompra").value = "";
+    }
+
+    function atualizarListaCompras() {
+      const ul = document.getElementById("listaDeCompras");
+      ul.innerHTML = "";
+      listaCompras.forEach((item, i) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        const btn = document.createElement("button");
+        btn.textContent = "X";
+        btn.className = "delete-btn";
+        btn.onclick = () => {
+          listaCompras.splice(i, 1);
+          atualizarListaCompras();
+        };
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+    }
+
+    // Exercícios Mentais
+    function verificarExercicio() {
+      const resposta = document.getElementById("respostaExercicio").value;
+      const resultado = document.getElementById("resultadoExercicio");
+      if (resposta.trim() === "12") {
+        resultado.textContent = "✅ Correto! Parabéns!";
+        resultado.style.color = "green";
+      } else {
+        resultado.textContent = "❌ Errado, tente novamente.";
+        resultado.style.color = "red";
+      }
+    }
+
+    // Lembretes Personalizados
+    const listaLembretes = [];
+    function adicionarLembrete() {
+      const texto = document.getElementById("textoLembrete").value.trim();
+      const hora = document.getElementById("horaLembrete").value;
+      if (!texto || !hora) {
+        alert("Preencha texto e horário do lembrete.");
+        return;
+      }
+      listaLembretes.push({ texto, hora });
+      atualizarListaLembretes();
+      document.getElementById("textoLembrete").value = "";
+      document.getElementById("horaLembrete").value = "";
+    }
+
+    function atualizarListaLembretes() {
+      const ul = document.getElementById("listaLembretes");
+      ul.innerHTML = "";
+      listaLembretes.forEach((l, i) => {
+        const li = document.createElement("li");
+        li.textContent = `${l.texto} - ${l.hora}`;
+        const btn = document.createElement("button");
+        btn.textContent = "X";
+        btn.className = "delete-btn";
+        btn.onclick = () => {
+          listaLembretes.splice(i, 1);
+          atualizarListaLembretes();
+        };
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+    }
+
+    // Diário da Saúde
+    function salvarDiario() {
+      const texto = document.getElementById("textoDiario").value.trim();
+      if (!texto) {
+        alert("Escreva algo para salvar.");
+        return;
+      }
+      localStorage.setItem("diarioSaude", texto);
+      document.getElementById("msgDiario").textContent = "Diário salvo com sucesso!";
+      setTimeout(() => {
+        document.getElementById("msgDiario").textContent = "";
+      }, 3000);
+      document.getElementById("textoDiario").value = "";
+    }
+
+    window.addEventListener("load", () => {
+      const texto = localStorage.getItem("diarioSaude");
+      if (texto) {
+        document.getElementById("textoDiario").value = texto;
+      }
+    });
+
+    // Contatos de Saúde
+    const listaContatos = [];
+    function adicionarContato() {
+      const nome = document.getElementById("nomeContato").value.trim();
+      const telefone = document.getElementById("telefoneContato").value.trim();
+
+      if (!nome || !telefone) {
+        alert("Preencha nome e telefone.");
+        return;
+      }
+
+      listaContatos.push({ nome, telefone });
+      atualizarListaContatos();
+      document.getElementById("nomeContato").value = "";
+      document.getElementById("telefoneContato").value = "";
+    }
+
+    function atualizarListaContatos() {
+      const ul = document.getElementById("listaContatos");
+      ul.innerHTML = "";
+      listaContatos.forEach((contato, i) => {
+        const li = document.createElement("li");
+        li.textContent = `${contato.nome} - ${contato.telefone}`;
+        const btn = document.createElement("button");
+        btn.textContent = "X";
+        btn.className = "delete-btn";
+        btn.onclick = () => {
+          listaContatos.splice(i, 1);
+          atualizarListaContatos();
+        };
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+    }
+
+    // Modo Texto Grande
+    function alternarTextoGrande() {
+      document.body.classList.toggle("grande");
+      alert("Modo texto grande " + (document.body.classList.contains("grande") ? "ativado" : "desativado"));
+    }
+
+    // Leitura em Voz Alta (Text-to-Speech)
+    function leituraVozAlta() {
+      const texto = window.prompt("Digite o texto para ler em voz alta:");
+      if (!texto) return;
+      const speech = new SpeechSynthesisUtterance(texto);
+      speech.lang = "pt-BR";
+      speech.rate = 0.9;
+      window.speechSynthesis.speak(speech);
+    }
+
+  </script>
+</body>
+
+</html>
